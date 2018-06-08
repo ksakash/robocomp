@@ -24,7 +24,7 @@
 
 // Ice includes
 #include <Ice/Ice.h>
-#include <Test.h>
+#include <TestComp.h>
 
 #include <config.h>
 #include "genericworker.h"

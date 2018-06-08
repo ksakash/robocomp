@@ -13,18 +13,20 @@ def TAB():
 	cog.out('<TABHERE>')
 
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 if component == None:
 	print('Can\'t locate', theCDSLs)
 	sys.exit(1)
 
 from parseIDSL import *
-pool = IDSLPool(theIDSLs)
+pool = IDSLPool(theIDSLs, includeDirectories)
+rosTypes = pool.getRosTypes()
 
 
 ]]]
 [[[end]]]
- *    Copyright (C) 
+ *    Copyright (C)
 [[[cog
 A()
 import datetime
@@ -58,15 +60,11 @@ Z()
 
 
 [[[cog
-
 try:
 	if 'agmagent' in [ x.lower() for x in component['options'] ]:
 		cog.outl("// THIS IS AN AGENT")
-
-
 except:
 	pass
-
 ]]]
 [[[end]]]
 
@@ -78,12 +76,23 @@ except:
 
 #include <genericworker.h>
 #include <innermodel/innermodel.h>
+<<<<<<< HEAD
+=======
+[[[cog
+if component['innermodelviewer']:
+	cog.outl("#ifdef USE_QTGUI")
+	cog.outl("<TABHERE>#include <osgviewer/osgview.h>")
+	cog.outl("<TABHERE>#include <innermodel/innermodelviewer.h>")
+	cog.outl("#endif")
+]]]
+[[[end]]]
+>>>>>>> upstream/highlyunstable
 
 class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
 public:
-	SpecificWorker(MapPrx& mprx);	
+	SpecificWorker(MapPrx& mprx);
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 
@@ -100,6 +109,7 @@ if 'implements' in component:
 				for mname in interface['methods']:
 					method = interface['methods'][mname]
 					paramStrA = ''
+<<<<<<< HEAD
 					for p in method['params']:
 						# delim
 						if paramStrA == '': delim = ''
@@ -115,6 +125,30 @@ if 'implements' in component:
 						# STR
 						paramStrA += delim + const + p['type'] + ' ' + ampersand + p['name']
 					cog.outl("<TABHERE>" + method['return'] + ' ' + method['name'] + '(' + paramStrA + ");")
+=======
+					if communicationIsIce(impa):
+						for p in method['params']:
+							# delim
+							if paramStrA == '': delim = ''
+							else: delim = ', '
+							# decorator
+							ampersand = '&'
+							if p['decorator'] == 'out':
+								const = ''
+							else:
+								const = 'const '
+								if p['type'].lower() in ['int', '::ice::int', 'float', '::ice::float']:
+									ampersand = ''
+							# STR
+							paramStrA += delim + const + p['type'] + ' ' + ampersand + p['name']
+						cog.outl("<TABHERE>" + method['return'] + ' ' + method['name'] + '(' + paramStrA + ");")
+					else:
+						paramStrA = module['name'] +"ROS::"+method['name']+"::Request &req, "+module['name']+"ROS::"+method['name']+"::Response &res"
+						if imp in component['iceInterfaces']:
+							cog.outl("<TABHERE>bool ROS" + method['name'] + '(' + paramStrA + ");")
+						else:
+							cog.outl("<TABHERE>bool " + method['name'] + '(' + paramStrA + ");")
+>>>>>>> upstream/highlyunstable
 
 if 'subscribesTo' in component:
 	for imp in component['subscribesTo']:
@@ -143,34 +177,75 @@ if 'subscribesTo' in component:
 							# STR
 							paramStrA += delim + const + p['type'] + ' ' + ampersand + p['name']
 						cog.outl("<TABHERE>" + method['return'] + ' ' + method['name'] + '(' + paramStrA + ");")
+<<<<<<< HEAD
 		else:
 			cog.outl("<TABHERE>" + method['return'] + ' ' + method['name'] + "();")
+=======
+					else:
+						for p in method['params']:
+							# delim
+							if paramStrA == '': delim = ''
+							else: delim = ', '
+							# decorator
+							ampersand = '&'
+							if p['decorator'] == 'out':
+								const = ''
+							else:
+								const = 'const '
+								ampersand = ''
+							if p['type'] in ('float','int'):
+								p['type'] = "std_msgs::"+p['type'].capitalize()+"32"
+							elif p['type'] in ('uint8','uint16','uint32','uint64'):
+								p['type'] = "std_msgs::UInt"+p['type'].split('t')[1]
+							elif p['type'] in rosTypes:
+								p['type'] = "std_msgs::"+p['type'].capitalize()
+							elif not '::' in p['type']:
+								p['type'] = module['name']+"ROS::"+p['type']
+							# STR
+							paramStrA += delim + p['type'] + ' ' + p['name']
+						if imp in component['iceInterfaces']:
+							cog.outl("<TABHERE>void ROS" + method['name'] + '(' + paramStrA + ");")
+						else:
+							cog.outl("<TABHERE>void " + method['name'] + '(' + paramStrA + ");")
+>>>>>>> upstream/highlyunstable
 
 ]]]
 [[[end]]]
 
 public slots:
-	void compute(); 	
+	void compute();
 
 private:
 [[[cog
+<<<<<<< HEAD
 
+=======
+if component['innermodelviewer']:
+	cog.outl("#ifdef USE_QTGUI")
+	cog.outl("<TABHERE>OsgView *osgView;")
+	cog.outl("<TABHERE>InnerModelViewer *innerModelViewer;")
+	cog.outl("#endif")
+>>>>>>> upstream/highlyunstable
 try:
-	if 'agmagent' in [ x.lower() for x in component['options'] ]:
+	if isAGM1Agent(component):
 		cog.outl("<TABHERE>std::string action;")
 		cog.outl("<TABHERE>ParameterMap params;")
 		cog.outl("<TABHERE>AGMModel::SPtr worldModel;")
-		cog.outl("<TABHERE>InnerModel *innerModel;")
 		cog.outl("<TABHERE>bool active;")
+		if 'innermodelviewer' in [ x.lower() for x in component['options'] ]:
+			cog.outl("<TABHERE>void regenerateInnerModelViewer();")
 		cog.outl("<TABHERE>bool setParametersAndPossibleActivation(const ParameterMap &prs, bool &reactivated);")
 		cog.outl("<TABHERE>void sendModificationProposal(AGMModel::SPtr &worldModel, AGMModel::SPtr &newModel);")
+	elif isAGM2Agent(component):
+		cog.outl("<TABHERE>std::string action;")
+		cog.outl("<TABHERE>AGMModel::SPtr worldModel;")
+		cog.outl("<TABHERE>bool active;")
 except:
 	pass
 
 ]]]
 [[[end]]]
-	
+
 };
 
 #endif
-

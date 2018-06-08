@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 module RoboCompAprilTags{
 	struct tag {
 	 	int id;
@@ -8,9 +9,29 @@ module RoboCompAprilTags{
 	 	float ry;
 	 	float rz;
 	 };
+=======
+import "GenericBase.idsl";
+import "JointMotor.idsl";
+
+module RoboCompAprilTags
+{
+	struct tag
+	{
+		int id;
+		float tx;
+		float ty;
+		float tz;
+		float rx;
+		float ry;
+		float rz;
+		string cameraId;
+	};
+
+>>>>>>> upstream/highlyunstable
 	sequence<tag> tagsList;
 	
 	interface AprilTags{
 		void newAprilTag(tagsList tags);
+		void newAprilTagAndPose(tagsList tags, RoboCompGenericBase::TBaseState bState,  RoboCompJointMotor::MotorStateMap hState );
 	};
 };

@@ -22,12 +22,18 @@
 #include "config.h"
 #include <QtCore>
 #include <iostream>
+<<<<<<< HEAD
+=======
+#include <boost/format.hpp> 
+>>>>>>> upstream/highlyunstable
 
 using namespace std;
 
 #if COMPILE_LOGGERCOMP==1
 	#include <Logger.h>
 #endif
+
+#include <boost/format.hpp>
 
 #define SetLoggerInstance(x) loggerInstance = x
 #define rDebug2(strng) qLog::getInstance()->send(std::string(__FILE__),__LINE__,std::string(__func__),boost::str(boost::format strng ),std::string("Debug"))

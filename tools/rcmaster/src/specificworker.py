@@ -61,7 +61,7 @@ class SpecificWorker(GenericWorker):
     def __init__(self, proxy_map):
         super(SpecificWorker, self).__init__(proxy_map)
         self.timer.timeout.connect(self.compute)
-        self.Period = 2000
+        self.Period = 200
         self.timer.start(self.Period)
         self.compdb = dict()
         self.compcache = dict()
@@ -91,9 +91,9 @@ class SpecificWorker(GenericWorker):
             if comp.status != CompStatus.Active:
                 continue
             for interface in comp.interfaces:
-                proxy = interface.name + ':' + interface.protocol + " -h " + comp.host.privateIP + ' -p ' + str(
+                proxy = interface.name.lower() + ':' + interface.protocol + " -h " + comp.host.privateIP + ' -p ' + str(
                     interface.port)
-                
+
                 basePrx = self.ic.stringToProxy(proxy)
                 # see if the component is up, else cache it
                 try:
@@ -103,6 +103,8 @@ class SpecificWorker(GenericWorker):
                     comp.status = CompStatus.Stopped
                     self.compcache[uid] = self.cache_ttyl
                     self.show_stats()
+                except Ice.ObjectNotExistException:
+                    print "cant find proxy: ",proxy
 
         # invalidate cache based on ttyl
         for uid in self.compcache.keys():
@@ -171,7 +173,7 @@ class SpecificWorker(GenericWorker):
             raise InvalidComponent(comp, "")
         uid = comp.name+comp.host.privateIP
         for interface in comp.interfaces:
-            uid = uid+interface.name
+            uid = uid+interface.name.lower()
         return str(hash(uid))
 
     def savedb(self):
@@ -280,24 +282,30 @@ class SpecificWorker(GenericWorker):
     # getComPort
     #
     def getComPort(self, compName, privateIP):
-        return self.getComp(compName, privateIP)[0].port
+        interfaces = self.getComp(compName, privateIP)
+        if len(interfaces) != 1:
+            raise InvalidComponent
+        return interfaces[0].port
 
     #
     # getComp
     #
     def getComp(self, compName, privateIP):
         # if passed an hostname convert to ip
+        privateIP=privateIP.strip()
         try:
             socket.inet_aton(privateIP)
         except socket.error:
-            privateIP = socket.gethostbyname(privateIP)
+            try:
+                privateIP = socket.gethostbyname(privateIP)
+            except socket.gaierror, err:
+                print "cant resolve hostname :",privateIP,err
+                raise InvalidComponent
 
         for comp in self.compdb.itervalues():
             if comp.status != CompStatus.Active:
                 continue
             if comp.name == compName and comp.host.privateIP == privateIP:
-                if len(comp.interfaces) != 1:
-                    raise InvalidComponent
                 return comp.interfaces
         raise ComponentNotFound
 
@@ -305,13 +313,13 @@ class SpecificWorker(GenericWorker):
     # flush
     #
     def flush(self, maindb):
-        print "Flusshing the cache ..."
+        print "Flushing the cache ..."
         for uid in self.compcache:
             self.compdb.pop(uid)
         self.compcache = dict()
         if maindb:
             self.compdb = dict()
-            print "Flusshing the mainDB ..."
+            print "Flushing the mainDB ..."
         self.show_stats()
 
 

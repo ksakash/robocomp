@@ -21,7 +21,7 @@
 /**
 * \brief Default constructor
 */
-SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
+SpecificWorker::SpecificWorker(MapPrx& mprx, Mapiface& miface) : GenericWorker(mprx, miface)
 {
 
 }
@@ -41,27 +41,107 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 
 	
 	timer.start(Period);
+	
 
 	return true;
 }
 
+void SpecificWorker::waitforComp(::IceProxy::Ice::Object* proxy, string interfaceName)
+{
+
+	timer.stop();
+	sleep(3);
+	bool flag = false;
+	for(auto const &iface : ifaces) 
+	{
+		if( iface.second.alias.compare(interfaceName)==0)
+		{
+			flag = true;
+			break;
+		}
+	}
+	if (flag==false)
+	{
+		timer.start(Period);
+		throw("interface "+interfaceName+" dosent exist");
+	}
+
+	string host;
+	if (interfaceName.compare("test")==0){
+		testPrx proxyf = (*(testPrx*)proxy);
+		host = proxyf->ice_toString();
+	}
+
+	host = host.substr(host.find("-h")+3,(host.find("-p")-host.find("-h")-3));
+
+	Ice::CommunicatorPtr ic;
+    ic = Ice::initialize();
+	string compName = ifaces[interfaceName].comp;//neep compMap
+
+	while (true)
+	{
+		try
+		{
+			interfaceList interfaces = rcmaster_proxy->getComp(compName,host);
+			string port = "0";
+			for (auto const &iface :interfaces)
+			{
+				if (iface.name.compare("test")==0)				{
+					port = std::to_string(iface.port);
+					string proxyStr = "test:"+iface.protocol+" -h "+host+" -p "+port;
+					test_proxy = testPrx::uncheckedCast( ic->stringToProxy( proxyStr ) );
+				}
+			}
+		}
+		catch (const ComponentNotFound& ex)
+		{
+			cout<< "waiting for "<< compName<<endl;
+			sleep(3);
+			continue;
+		}
+		catch  (const Ice::SocketException& ex)
+		{
+			cout<< "waiting for "<< compName<<endl;
+			sleep(3);
+			continue;
+		}
+		catch (const Ice::Exception& ex)
+		{
+			cout<<"Cannot connect to the remote object "<<compName;
+			sleep(3);
+			continue;
+		}		
+		timer.start(Period);
+		break;
+	}
+
+}
+
 void SpecificWorker::compute()
 {
+//computeCODE
 // 	try
 // 	{
 // 		camera_proxy->getYImage(0,img, cState, bState);
 // 		memcpy(image_gray.data, &img[0], m_width*m_height*sizeof(uchar));
 // 		searchTags(image_gray);
 // 	}
+// 	catch ( const Ice::SocketException& ex)
+//	{
+//		waitforComp((::IceProxy::Ice::Object*)(&camera_proxy),"camera");
+//	}
 // 	catch(const Ice::Exception &e)
 // 	{
 // 		std::cout << "Error reading from Camera" << e << std::endl;
 // 	}
+// 		try
+
 }
 
 
 void SpecificWorker::printmsg(const string &message)
 {
+//implementCODE
 
 }
 

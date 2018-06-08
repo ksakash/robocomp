@@ -14,12 +14,21 @@ def TAB():
 	cog.out('<TABHERE>')
 
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 
+<<<<<<< HEAD
+=======
+from parseIDSL import *
+pool = IDSLPool(theIDSLs, includeDirectories)
+>>>>>>> upstream/highlyunstable
 
 REQUIRE_STR = """
-<TABHERE><TABHERE># Remote object connection for <NORMAL>
+<TABHERE># Remote object connection for <NORMAL>
+<TABHERE>try:
+<TABHERE><TABHERE>proxyString = ic.getProperties().getProperty('<NORMAL><NUM>Proxy')
 <TABHERE><TABHERE>try:
+<<<<<<< HEAD
 <TABHERE><TABHERE><TABHERE>proxyString = ic.getProperties().getProperty('<NORMAL>Proxy')
 <TABHERE><TABHERE><TABHERE>try:
 <TABHERE><TABHERE><TABHERE><TABHERE>basePrx = ic.stringToProxy(proxyString)
@@ -32,37 +41,53 @@ REQUIRE_STR = """
 <TABHERE><TABHERE>except Ice.Exception, e:
 <TABHERE><TABHERE><TABHERE>print e
 <TABHERE><TABHERE><TABHERE>print 'Cannot get <NORMAL>Proxy property.'
+=======
+<TABHERE><TABHERE><TABHERE>basePrx = ic.stringToProxy(proxyString)
+<TABHERE><TABHERE><TABHERE><LOWER><NUM>_proxy = <NORMAL>Prx.checkedCast(basePrx)
+<TABHERE><TABHERE><TABHERE>mprx["<NORMAL>Proxy<NUM>"] = <LOWER><NUM>_proxy
+<TABHERE><TABHERE>except Ice.Exception:
+<TABHERE><TABHERE><TABHERE>print 'Cannot connect to the remote object (<NORMAL>)', proxyString
+<TABHERE><TABHERE><TABHERE>#traceback.print_exc()
+>>>>>>> upstream/highlyunstable
 <TABHERE><TABHERE><TABHERE>status = 1
+<TABHERE>except Ice.Exception, e:
+<TABHERE><TABHERE>print e
+<TABHERE><TABHERE>print 'Cannot get <NORMAL>Proxy property.'
+<TABHERE><TABHERE>status = 1
 """
 
 SUBSCRIBESTO_STR = """
-<TABHERE><TABHERE><NORMAL>_adapter = ic.createObjectAdapter("<NORMAL>Topic")
-<TABHERE><TABHERE><LOWER>I_ = <NORMAL>I(worker)
-<TABHERE><TABHERE><LOWER>_proxy = <NORMAL>_adapter.addWithUUID(<LOWER>I_).ice_oneway()
+<TABHERE><NORMAL>_adapter = ic.createObjectAdapter("<NORMAL>Topic")
+<TABHERE><LOWER>I_ = <NORMAL>I(worker)
+<TABHERE><LOWER>_proxy = <NORMAL>_adapter.addWithUUID(<LOWER>I_).ice_oneway()
 
-<TABHERE><TABHERE>subscribeDone = False
-<TABHERE><TABHERE>while not subscribeDone:
-<TABHERE><TABHERE><TABHERE>try:
-<TABHERE><TABHERE><TABHERE><TABHERE><LOWER>_topic = topicManager.retrieve("<NORMAL>")
-<TABHERE><TABHERE><TABHERE><TABHERE>subscribeDone = True
-<TABHERE><TABHERE><TABHERE>except Ice.Exception, e:
-<TABHERE><TABHERE><TABHERE><TABHERE>print "Error. Topic does not exist (yet)"
-<TABHERE><TABHERE><TABHERE><TABHERE>status = 0
-<TABHERE><TABHERE><TABHERE><TABHERE>time.sleep(1)
-<TABHERE><TABHERE>qos = {}
-<TABHERE><TABHERE><LOWER>_topic.subscribeAndGetPublisher(qos, <LOWER>_proxy)
-<TABHERE><TABHERE><NORMAL>_adapter.activate()
+<TABHERE>subscribeDone = False
+<TABHERE>while not subscribeDone:
+<TABHERE><TABHERE>try:
+<TABHERE><TABHERE><TABHERE><LOWER>_topic = topicManager.retrieve("<NORMAL>")
+<TABHERE><TABHERE><TABHERE>subscribeDone = True
+<TABHERE><TABHERE>except Ice.Exception, e:
+<TABHERE><TABHERE><TABHERE>print "Error. Topic does not exist (yet)"
+<TABHERE><TABHERE><TABHERE>status = 0
+<TABHERE><TABHERE><TABHERE>time.sleep(1)
+<TABHERE>qos = {}
+<TABHERE><LOWER>_topic.subscribeAndGetPublisher(qos, <LOWER>_proxy)
+<TABHERE><NORMAL>_adapter.activate()
 """
 
 PUBLISHES_STR = """
-<TABHERE><TABHERE># Create a proxy to publish a <NORMAL> topic
-<TABHERE><TABHERE>topic = False
+<TABHERE># Create a proxy to publish a <NORMAL> topic
+<TABHERE>topic = False
+<TABHERE>try:
+<TABHERE><TABHERE>topic = topicManager.retrieve("<NORMAL>")
+<TABHERE>except:
+<TABHERE><TABHERE>pass
+<TABHERE>while not topic:
 <TABHERE><TABHERE>try:
 <TABHERE><TABHERE><TABHERE>topic = topicManager.retrieve("<NORMAL>")
-<TABHERE><TABHERE>except:
-<TABHERE><TABHERE><TABHERE>pass
-<TABHERE><TABHERE>while not topic:
+<TABHERE><TABHERE>except IceStorm.NoSuchTopic:
 <TABHERE><TABHERE><TABHERE>try:
+<<<<<<< HEAD
 <TABHERE><TABHERE><TABHERE><TABHERE>topic = topicManager.retrieve("<NORMAL>")
 <TABHERE><TABHERE><TABHERE>except IceStorm.NoSuchTopic:
 <TABHERE><TABHERE><TABHERE><TABHERE>try:
@@ -72,12 +97,20 @@ PUBLISHES_STR = """
 <TABHERE><TABHERE>pub = topic.getPublisher().ice_oneway()
 <TABHERE><TABHERE><LOWER>Topic = <NORMAL>Prx.uncheckedCast(pub)
 <TABHERE><TABHERE>mprx["<NORMAL>Pub"] = <LOWER>Topic
+=======
+<TABHERE><TABHERE><TABHERE><TABHERE>topic = topicManager.create("<NORMAL>")
+<TABHERE><TABHERE><TABHERE>except:
+<TABHERE><TABHERE><TABHERE><TABHERE>print 'Another client created the <NORMAL> topic? ...'
+<TABHERE>pub = topic.getPublisher().ice_oneway()
+<TABHERE><LOWER>Topic = <NORMAL>Prx.uncheckedCast(pub)
+<TABHERE>mprx["<NORMAL>Pub"] = <LOWER>Topic
+>>>>>>> upstream/highlyunstable
 """
 
 IMPLEMENTS_STR = """
-<TABHERE><TABHERE>adapter = ic.createObjectAdapter('<NORMAL>')
-<TABHERE><TABHERE>adapter.add(<NORMAL>I(worker), ic.stringToIdentity('<LOWER>'))
-<TABHERE><TABHERE>adapter.activate()
+<TABHERE>adapter = ic.createObjectAdapter('<NORMAL>')
+<TABHERE>adapter.add(<NORMAL>I(worker), ic.stringToIdentity('<LOWER>'))
+<TABHERE>adapter.activate()
 """
 ]]]
 [[[end]]]
@@ -160,9 +193,8 @@ import sys, traceback, Ice, IceStorm, subprocess, threading, time, Queue, os, co
 
 # Ctrl+c handling
 import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from PySide import *
+from PySide import QtGui, QtCore
 
 from specificworker import *
 
@@ -245,6 +277,7 @@ for rqa in component['requires']:
 	cog.outl(w)
 
 try:
+<<<<<<< HEAD
 	if len(component['publishes']) > 0 or len(component['subscribesTo']) > 0:
 		cog.outl("""
 		<TABHERE><TABHERE># Topic Manager
@@ -255,6 +288,34 @@ try:
 		<TABHERE><TABHERE>except ConnectionRefusedException:
 		<TABHERE><TABHERE><TABHERE>raise Exception("STORM not running") """)
 
+=======
+	needIce = False
+	needStorm = False
+	for req in component['requires']:
+		if communicationIsIce(req):
+			needIce = True
+	for imp in component['implements']:
+		if communicationIsIce(imp):
+			needIce = True
+	for pub in component['publishes']:
+		if communicationIsIce(pub):
+			needIce = True
+			needStorm = True
+	for sub in component['subscribesTo']:
+		if communicationIsIce(sub):
+			needIce = True
+			needStorm = True
+	if needStorm:
+		cog.outl("""
+<TABHERE># Topic Manager
+<TABHERE>proxy = ic.getProperties().getProperty("TopicManager.Proxy")
+<TABHERE>obj = ic.stringToProxy(proxy)
+<TABHERE>try:
+<TABHERE><TABHERE>topicManager = IceStorm.TopicManagerPrx.checkedCast(obj)
+<TABHERE>except Ice.ConnectionRefusedException, e:
+<TABHERE><TABHERE>print 'Cannot connect to IceStorm! ('+proxy+')'
+<TABHERE><TABHERE>sys.exit(-1)""")
+>>>>>>> upstream/highlyunstable
 except:
 	pass
 
@@ -282,10 +343,60 @@ for ima in component['implements']:
 	if type(ima) == type(''):
 		im = ima
 	else:
+<<<<<<< HEAD
 		im = ima[0]
 	w = IMPLEMENTS_STR.replace("<NORMAL>", im).replace("<LOWER>", im.lower())
 	cog.outl(w)
 
+=======
+		st = sut[0]
+	if communicationIsIce(sut):
+		w = SUBSCRIBESTO_STR.replace("<NORMAL>", st).replace("<LOWER>", st.lower())
+		cog.outl(w)
+if component['usingROS'] == True:
+	cog.outl("<TABHERE>rospy.init_node(\""+component['name']+"\", anonymous=True)")
+for sub in component['subscribesTo']:
+	nname = sub
+	while type(nname) != type(''):
+		nname = nname[0]
+	module = pool.moduleProviding(nname)
+	if module == None:
+		print ('\nCan\'t find module providing', nname, '\n')
+		sys.exit(-1)
+	if not communicationIsIce(sub):
+		for interface in module['interfaces']:
+			if interface['name'] == nname:
+				for mname in interface['methods']:
+					method = interface['methods'][mname]
+					for p in method['params']:
+						s = "\""+mname+"\""
+						if p['type'] in ('float','int'):
+							cog.outl("<TABHERE>rospy.Subscriber("+s+", "+p['type'].capitalize()+"32, worker.ROS"+method['name']+")")
+						elif p['type'] in ('uint8','uint16','uint32','uint64'):
+							cog.outl("<TABHERE>rospy.Subscriber("+s+", UInt"+p['type'].split('t')[1]+", worker.ROS"+method['name']+")")
+						elif p['type'] in rosTypes:
+							cog.outl("<TABHERE>rospy.Subscriber("+s+", "+p['type'].capitalize()+", worker.ROS"+method['name']+")")
+						elif '::' in p['type']:
+							cog.outl("<TABHERE>rospy.Subscriber("+s+", "+p['type'].split('::')[1]+", worker.ROS"+method['name']+")")
+						else:
+							cog.outl("<TABHERE>rospy.Subscriber("+s+", "+p['type']+", worker.ROS"+method['name']+")")
+
+for imp in component['implements']:
+	nname = imp
+	while type(nname) != type(''):
+		nname = nname[0]
+	module = pool.moduleProviding(nname)
+	if module == None:
+		print ('\nCan\'t find module providing', nname, '\n')
+		sys.exit(-1)
+	if not communicationIsIce(imp):
+		for interface in module['interfaces']:
+			if interface['name'] == nname:
+				for mname in interface['methods']:
+					method = interface['methods'][mname]
+					s = "\""+mname+"\""
+					cog.outl("<TABHERE>rospy.Service("+s+", "+mname+", worker.ROS"+method['name']+")")
+>>>>>>> upstream/highlyunstable
 
 for sto in component['subscribesTo']:
 	if type(sto) == type(''):
@@ -297,9 +408,14 @@ for sto in component['subscribesTo']:
 ]]]
 [[[end]]]
 
+<<<<<<< HEAD
 #<TABHERE><TABHERE>adapter.add(CommonBehaviorI(<LOWER>I, ic), ic.stringToIdentity('commonbehavior'))
 
 		app.exec_()
+=======
+	signal.signal(signal.SIGINT, signal.SIG_DFL)
+	app.exec_()
+>>>>>>> upstream/highlyunstable
 
 	if ic:
 		try:

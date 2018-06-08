@@ -4,6 +4,54 @@
 /** XXXServer **/
 /** XXXServer **/
 /** XXXServer **/
+
+// -----------------------------------------------------------
+// DisplayServer
+// -----------------------------------------------------------
+
+DisplayServer::DisplayServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker_, uint32_t _port)
+{
+	port = _port;
+	worker = worker_;
+	std::stringstream out1;
+	out1 << port;
+	comm = communicator;
+	std::string name = std::string("Display") + out1.str();
+	std::string endp = std::string("tcp -p ")    + out1.str();
+
+	adapter = communicator->createObjectAdapterWithEndpoints(name, endp);
+	printf("Creating Display adapter <<%s>> with endpoint <<%s>>\n", name.c_str(), endp.c_str());
+	interface = new DisplayI(worker);
+	adapter->add(interface, communicator->stringToIdentity("display"));
+	adapter->activate();
+}
+
+void DisplayServer::add(InnerModelDisplay *display)
+{
+	interface->add(display->id);
+}
+
+bool DisplayServer::empty()
+{
+	return false;
+}
+
+void DisplayServer::shutdown()
+{
+	try
+	{
+		adapter->remove(comm->stringToIdentity("display"));
+	}
+	catch(Ice::ObjectAdapterDeactivatedException e)
+	{
+	}
+
+	adapter->destroy();
+}
+// -----------------------------------------------------------
+// JointMotorServer
+// -----------------------------------------------------------
+
 JointMotorServer::JointMotorServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker_, uint32_t _port)
 {
 	port = _port;
@@ -67,6 +115,10 @@ void JointMotorServer::shutdown()
 	adapter->destroy();
 }
 
+// -----------------------------------------------------------
+// TouchSensorServer
+// -----------------------------------------------------------
+
 TouchSensorServer::TouchSensorServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker_, uint32_t _port)
 {
 	port = _port;
@@ -112,6 +164,9 @@ void TouchSensorServer::shutdown()
 }
 
 
+// -----------------------------------------------------------
+// LaserServer
+// -----------------------------------------------------------
 
 LaserServer::LaserServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker, uint32_t _port)
 {
@@ -135,6 +190,10 @@ void LaserServer::add(InnerModelLaser *laser)
 }
 
 
+// -----------------------------------------------------------
+// RGBDServer
+// -----------------------------------------------------------
+
 RGBDServer::RGBDServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker, uint32_t _port)
 {
 	port = _port;
@@ -156,6 +215,10 @@ void RGBDServer::add(InnerModelRGBD *rgbd)
 	interface->add(rgbd->id);
 }
 
+
+// -----------------------------------------------------------
+// IMUServer
+// -----------------------------------------------------------
 
 IMUServer::IMUServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker, uint32_t _port)
 {
@@ -179,6 +242,10 @@ void IMUServer::add(InnerModelIMU *imu)
 }
 
 
+// -----------------------------------------------------------
+// DifferentialRobotServer
+// -----------------------------------------------------------
+
 DifferentialRobotServer::DifferentialRobotServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker, uint32_t _port)
 {
 	port = _port;
@@ -200,6 +267,11 @@ void DifferentialRobotServer::add(InnerModelDifferentialRobot *differentialrobot
 	interface->start();
 }
 
+
+// -----------------------------------------------------------
+// OmniRobotServer
+// -----------------------------------------------------------
+
 OmniRobotServer::OmniRobotServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker, uint32_t _port)
 {
 	port = _port;
@@ -216,8 +288,12 @@ OmniRobotServer::OmniRobotServer(Ice::CommunicatorPtr communicator, SpecificWork
 
 	printf("Creating DifferentialRobot [[emulated from an OmniRobot interface]] adapter <<%s>> with endpoint <<%s>>\n", name.c_str(), endp.c_str());
 	interfaceDFR = new DifferentialRobotI(worker, interface);
-
 	adapter->add(interfaceDFR, communicator->stringToIdentity("differentialrobot"));
+	adapter->activate();
+
+	printf("Creating GenericBase adapter <<%s>> with endpoint <<%s>>\n", name.c_str(), endp.c_str());
+	interfaceGB = new GenericBaseI(worker, interface);
+	adapter->add(interfaceGB, communicator->stringToIdentity("genericbase"));
 	adapter->activate();
 }
 
@@ -226,6 +302,8 @@ void OmniRobotServer::add(InnerModelOmniRobot *omnirobot)
 	omnirobots.push_back(omnirobot);
 	interface->add(omnirobot->id);
 	interface->start();
+	interfaceGB->add(omnirobot->id);
+	interfaceGB->start();
 // 	interfaceDFR->add(omnirobot->id);
 // 	interfaceDFR->start();
 }

@@ -1,9 +1,17 @@
 [[[cog
-
 import sys
 sys.path.append('/opt/robocomp/python')
 
 import cog
+
+includeDirectories = theIDSLPaths.split('#')
+
+
+
+
+
+
+
 def A():
 	cog.out('<@@<')
 def Z():
@@ -16,14 +24,23 @@ def SPACE(i=0):
 		s = str(i)
 	cog.out('<S'+s+'>')
 
+
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+
+
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 
 ]]]
 [[[end]]]
+<<<<<<< HEAD
 
 cmake_minimum_required(VERSION 2.6)
 PROJECT( 
+=======
+cmake_minimum_required(VERSION 2.8.11)
+PROJECT(
+>>>>>>> upstream/highlyunstable
 [[[cog
 A()
 cog.out(' ' + component['name'])
@@ -32,7 +49,7 @@ Z()
 [[[end]]]
  )
 
- 
+
 IF ( "$ENV{ROBOCOMP}" STREQUAL "")
   MESSAGE(WARNING "ROBOCOMP variable not set. Using the default value: /opt/robocomp")
   SET (ENV{ROBOCOMP} "/opt/robocomp/")
@@ -49,6 +66,7 @@ INCLUDE ( CMakeListsSpecific.txt)
 SET ( SOURCES
   ${SOURCES}
   $ENV{ROBOCOMP}/classes/rapplication/rapplication.cpp
+  $ENV{ROBOCOMP}/classes/sigwatch/sigwatch.cpp
   $ENV{ROBOCOMP}/classes/qlog/qlog.cpp
   main.cpp
   genericmonitor.cpp
@@ -70,9 +88,13 @@ for subscribe in component['subscribesTo']:
 		subs = subs[0]
 	if communicationIsIce(subscribe):
 		cog.outl('<S2>' + subs.lower() + 'I.cpp')
+<<<<<<< HEAD
 	else:
 		cog.outl('<S2>ROS' + subs.lower() + 'I.cpp')
 		
+=======
+
+>>>>>>> upstream/highlyunstable
 
 ]]]
 [[[end]]]
@@ -94,18 +116,36 @@ for subscribe in component['subscribesTo']:
 if usingROS:
 	cog.outl('find_package(catkin REQUIRED)')
 	cog.outl('include_directories(  ${catkin_INCLUDE_DIRS} )')
+<<<<<<< HEAD
 	cog.outl('SET ( LIBS ${LIBS} ${catkin_LIBRARIES} -L/opt/ros/jade/lib -lroscpp -lrosconsole -lroscpp_serialization) # -lrosbag')
+=======
+	cog.outl('include_directories(  "/opt/ros/kinetic/include" )')
+	cog.outl('SET ( LIBS ${LIBS} ${catkin_LIBRARIES} -L/opt/ros/kinetic/lib -lroscpp -lrosconsole -lroscpp_serialization -lrostime -lxmlrpcpp -lcpp_common -lrosconsole_log4cxx -lrosconsole_backend_interface)')
+>>>>>>> upstream/highlyunstable
 ]]]
 [[[end]]]
 
 
 #ROBOCOMP
 ROBOCOMP_INITIALIZE( $ENV{ROBOCOMP}/ )
-ROBOCOMP_WRAP_ICE( CommonBehavior 
+ROBOCOMP_WRAP_ICE( CommonBehavior
 [[[cog
 A()
 for im in component['recursiveImports']:
+<<<<<<< HEAD
 	cog.out(im.split('/')[-1].split('.')[0] + ' ')
+=======
+	if communicationIsIce(im):
+		cog.out(' ' + im.split('/')[-1].split('.')[0] + ' ')
+try:
+	options = [ x.lower() for x in component['options'] ]
+	if 'agmagent' in options:
+		cog.out(" AGMExecutive AGMWorldModel Planning AGMCommonBehavior ")
+	elif 'agm2agent' in options or 'agm2agentICE' in options or 'agm2agentROS' in options:
+		cog.out(" AGM2 ")
+except:
+	pass
+>>>>>>> upstream/highlyunstable
 Z()
 ]]]
 [[[end]]]
@@ -135,10 +175,13 @@ if component['gui'] != 'none':
 [[[cog
 
 try:
-	if 'agmagent' in [ x.lower() for x in component['options'] ]:
+	if isAGM1Agent(component):
 		cog.outl("SET(LIBS ${LIBS} -lagm)")
-
-
+		cog.outl("ADD_DEFINITIONS( -I/usr/include/libxml2/ )")
+	if isAGM2Agent(component):
+		cog.outl("SET(LIBS ${LIBS} -lagm2)")
+		cog.outl("ADD_DEFINITIONS( -I/usr/include/libxml2/ )")
+		cog.outl("include(/usr/local/share/cmake/FindAGM2.cmake)")
 except:
 	pass
 

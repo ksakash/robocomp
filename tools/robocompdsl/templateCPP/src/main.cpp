@@ -13,7 +13,8 @@ def TAB():
 	cog.out('<TABHERE>')
 
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 
 
 REQUIRE_STR = """
@@ -209,6 +210,7 @@ Z()
 #include <Ice/Application.h>
 
 #include <rapplication/rapplication.h>
+#include <sigwatch/sigwatch.h>
 #include <qlog/qlog.h>
 
 #include "config.h"
@@ -253,6 +255,7 @@ for imp in component['imports']:
 using namespace std;
 using namespace RoboCompCommonBehavior;
 
+<<<<<<< HEAD
 
 [[[cog
 
@@ -264,6 +267,8 @@ for m in pool.modulePool:
 [[[end]]]
 
 
+=======
+>>>>>>> upstream/highlyunstable
 class
 [[[cog
 A()
@@ -330,7 +335,10 @@ Z()
 	sigaddset(&sigs, SIGTERM);
 	sigprocmask(SIG_UNBLOCK, &sigs, 0);
 
-
+	UnixSignalWatcher sigwatch;
+	sigwatch.watchForSignal(SIGINT);
+	sigwatch.watchForSignal(SIGTERM);
+	QObject::connect(&sigwatch, SIGNAL(unixSignal(int)), &a, SLOT(quit()));
 
 	int status=EXIT_SUCCESS;
 
@@ -340,7 +348,17 @@ for namea, num in getNameNumber(component['requires'] + component['publishes']):
 		name = namea
 	else:
 		name = namea[0]
+<<<<<<< HEAD
 	cog.outl('<TABHERE>'+name+'Prx '+name.lower()+num +'_proxy;')
+=======
+		if communicationIsIce(namea):
+			cog.outl('<TABHERE>'+name+'Prx '+name.lower()+num +'_proxy;')
+try:
+	if isAGM1Agent(component):
+		cog.outl("<TABHERE>AGMExecutivePrx agmexecutive_proxy;")
+except:
+	pass
+>>>>>>> upstream/highlyunstable
 ]]]
 [[[end]]]
 
@@ -353,6 +371,7 @@ for namea, num in getNameNumber(component['requires']):
 		name = namea
 	else:
 		name = namea[0]
+<<<<<<< HEAD
 	w = REQUIRE_STR.replace("<NORMAL>", name).replace("<LOWER>", name.lower()).replace("<PROXYNAME>", name.lower()+num).replace("<PROXYNUMBER>", num)
 	cog.outl(w)
 
@@ -365,6 +384,30 @@ if len(component['publishes'])>0 or len(component['subscribesTo'])>0:
 	cog.outl('<TABHERE><TABHERE>return EXIT_FAILURE;')
 	cog.outl('<TABHERE>}')
 
+=======
+	if communicationIsIce(namea):
+		w = REQUIRE_STR.replace("<NORMAL>", name).replace("<LOWER>", name.lower()).replace("<PROXYNAME>", name.lower()+num).replace("<PROXYNUMBER>", num)
+		cog.outl(w)
+
+need_topic=False
+for pub in component['publishes']:
+	if communicationIsIce(pub):
+		need_topic = True
+for pub in component['subscribesTo']:
+	if communicationIsIce(pub):
+		need_topic = True
+if need_topic:
+	cog.outl('<TABHERE>IceStorm::TopicManagerPrx topicManager;')
+	cog.outl('<TABHERE>try')
+	cog.outl('<TABHERE>{')
+	cog.outl('<TABHERE><TABHERE>topicManager = IceStorm::TopicManagerPrx::checkedCast(communicator()->propertyToProxy("TopicManager.Proxy"));')
+	cog.outl('<TABHERE>}')
+	cog.outl('<TABHERE>catch (const Ice::Exception &ex)')
+	cog.outl('<TABHERE>{')
+	cog.outl('<TABHERE><TABHERE>cout << "[" << PROGRAM_NAME << "]: Exception: STORM not running: " << ex << endl;')
+	cog.outl('<TABHERE><TABHERE>return EXIT_FAILURE;')
+	cog.outl('<TABHERE>}')
+>>>>>>> upstream/highlyunstable
 
 
 for pba in component['publishes']:
@@ -393,12 +436,12 @@ if usingROS:
 
 	if ( !monitor->isRunning() )
 		return status;
-	
+
 	while (!monitor->ready)
 	{
 		usleep(10000);
 	}
-	
+
 	try
 	{
 		// Server adapter creation and publication
@@ -450,6 +493,19 @@ for name, num in getNameNumber(component['subscribesTo']):
 #endif
 		// Run QT Application Event Loop
 		a.exec();
+
+[[[cog
+for sub in component['subscribesTo']:
+	nname = sub
+	while type(nname) != type(''):
+		nname = sub[0]
+	if communicationIsIce(sub):
+		cog.outl("<TABHERE><TABHERE>std::cout << \"Unsubscribing topic: "+nname.lower()+" \" <<std::endl;")
+		cog.outl("<TABHERE><TABHERE>"+ nname.lower() + "_topic->unsubscribe( "+ nname.lower() +" );" )
+
+]]]
+[[[end]]]
+
 		status = EXIT_SUCCESS;
 	}
 	catch(const Ice::Exception& ex)
@@ -513,4 +569,3 @@ app(prefix);
 
 	return app.main(argc, argv, configFile.c_str());
 }
-

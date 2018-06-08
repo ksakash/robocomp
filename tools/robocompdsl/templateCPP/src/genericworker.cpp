@@ -13,18 +13,19 @@ def TAB():
 	cog.out('<TABHERE>')
 
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 if component == None:
 	print('Can\'t locate', theCDSLs)
 	sys.exit(1)
 
 from parseIDSL import *
-pool = IDSLPool(theIDSLs)
+pool = IDSLPool(theIDSLs, includeDirectories)
 
 
 ]]]
 [[[end]]]
- *    Copyright (C) 
+ *    Copyright (C)
 [[[cog
 A()
 import datetime
@@ -96,6 +97,66 @@ if len(component['publishes'])>0 or len(component['subscribesTo'])>0:
 	mutex = new QMutex(QMutex::Recursive);
 
 [[[cog
+<<<<<<< HEAD
+=======
+if component['usingROS'] == True:
+	#INICIALIZANDO SUBSCRIBERS
+	for imp in component['subscribesTo']:
+		nname = imp
+		while type(nname) != type(''):
+			nname = nname[0]
+		module = pool.moduleProviding(nname)
+		if module == None:
+			print ('\nCan\'t find module providing', nname, '\n')
+			sys.exit(-1)
+		if not communicationIsIce(imp):
+			for interface in module['interfaces']:
+				if interface['name'] == nname:
+					for mname in interface['methods']:
+						s = "\""+mname+"\""
+						if nname in component['iceInterfaces']:
+							cog.outl("<TABHERE>"+nname+"_"+mname+" = node.subscribe("+s+", 1000, &GenericWorker::ROS"+mname+", this);")
+						else:
+							cog.outl("<TABHERE>"+nname+"_"+mname+" = node.subscribe("+s+", 1000, &GenericWorker::"+mname+", this);")
+	#INICIALIZANDO IMPLEMENTS
+	for imp in component['implements']:
+		nname = imp
+		while type(nname) != type(''):
+			nname = nname[0]
+		module = pool.moduleProviding(nname)
+		if module == None:
+			print ('\nCan\'t find module providing', nname, '\n')
+			sys.exit(-1)
+		if not communicationIsIce(imp):
+			for interface in module['interfaces']:
+				if interface['name'] == nname:
+					for mname in interface['methods']:
+						s = "\""+mname+"\""
+						if nname in component['iceInterfaces']:
+							cog.outl("<TABHERE>"+nname+"_"+mname+" = node.advertiseService("+s+", &GenericWorker::ROS"+mname+", this);")
+						else:
+							cog.outl("<TABHERE>"+nname+"_"+mname+" = node.advertiseService("+s+", &GenericWorker::"+mname+", this);")
+if 'publishes' in component:
+	for publish in component['publishes']:
+		pubs = publish
+		while type(pubs) != type(''):
+			pubs = pubs[0]
+		if not communicationIsIce(publish):
+			if pubs in component['iceInterfaces']:
+				cog.outl("<TABHERE>"+pubs.lower()+"_rosproxy = new Publisher"+pubs+"(&node);")
+			else:
+				cog.outl("<TABHERE>"+pubs.lower()+"_proxy = new Publisher"+pubs+"(&node);")
+if 'requires' in component:
+	for require in component['requires']:
+		req = require
+		while type(req) != type(''):
+			req = req[0]
+		if not communicationIsIce(require):
+			if req in component['iceInterfaces']:
+				cog.outl("<TABHERE>"+req.lower()+"_rosproxy = new ServiceClient"+req+"(&node);")
+			else:
+				cog.outl("<TABHERE>"+req.lower()+"_proxy = new ServiceClient"+req+"(&node);")
+>>>>>>> upstream/highlyunstable
 if component['gui'] != 'none':
 	cog.outl("""<TABHERE>#ifdef USE_QTGUI
 		setupUi(this);
@@ -188,7 +249,7 @@ try:
 	} while (iss);
 
 	return ret;
-}	
+}
 
 
 bool GenericWorker::activate(const BehaviorParameters &prs)
@@ -202,7 +263,7 @@ bool GenericWorker::activate(const BehaviorParameters &prs)
 	return active;
 }
 
-bool GenericWorker::deactivate() 
+bool GenericWorker::deactivate()
 {
 	printf("Worker::deactivate\\n");
 	mutex->lock();

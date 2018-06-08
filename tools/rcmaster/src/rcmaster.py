@@ -56,6 +56,7 @@
 #
 
 import sys, traceback, Ice, IceStorm, subprocess, threading, time, Queue, os, copy
+from re import search
 
 # Ctrl+c handling
 import signal
@@ -117,14 +118,22 @@ class CommonBehaviorI(RoboCompCommonBehavior.CommonBehavior):
 if __name__ == '__main__':
     app = QtCore.QCoreApplication(sys.argv)
     params = copy.deepcopy(sys.argv)
+    bin_path = os.path.dirname(os.path.abspath(__file__))
     if len(params) > 1:
-        if not params[1].startswith('--Ice.Config='):
+        if not params[1].startswith('--Ice.Config=') and not params[1].startswith("--"):
             params[1] = '--Ice.Config=' + params[1]
     elif len(params) == 1:
-        params.append('--Ice.Config=config')
+        params.append('--Ice.Config='+bin_path+'/config')
     ic = Ice.initialize(params)
+    for param in params:
+        if param.startswith('--'):
+            name = search('--(.*)=',param).group(1)
+            val = search('=(.*)',param).group(1)
+            if name != '' and val != '':
+                ic.getProperties().setProperty(name,val)
     status = 0
     mprx = {}
+    configFile = os.path.join(os.path.expanduser('~'), ".config/RoboComp/rcmaster.config")
 
     try:
 
@@ -143,15 +152,20 @@ if __name__ == '__main__':
 
         # check if rcmaster is already running
         try:
-            with open(os.path.join(os.path.expanduser('~'), ".config/RoboComp/rcmaster.config"), 'r') as f:
+            with open(configFile, 'r') as f:
                 rcmaster_uri = f.readline().strip().split(":")
-            basePrx = ic.stringToProxy("rcmaster:tcp -h "+rcmaster_uri[0]+" -p "+rcmaster_uri[1])
             try:
+                basePrx = ic.stringToProxy("rcmaster:tcp -h "+rcmaster_uri[0]+" -p "+rcmaster_uri[1])
                 rcmaster_proxy = RoboCompRCMaster.rcmasterPrx.checkedCast(basePrx)
-            except Ice.SocketException:
+            except (Ice.SocketException,IndexError):
                 pass
             else:
                 raise Exception("Another instance of RCMaster is running")
+        except IOError:
+            basedir = os.path.dirname(configFile)
+            if not os.path.exists(basedir):
+                os.makedirs(basedir)
+            open(configFile, 'a').close()
         except Ice.Exception:
             traceback.print_exc()
             status = 1
@@ -171,16 +185,16 @@ if __name__ == '__main__':
         
         #write to config file
         try:
-            f = open(os.path.join(os.path.expanduser('~'), ".config/RoboComp/rcmaster.config"),'r+')
+            f = open(configFile,'r+')
             configs = f.read().splitlines()
             if len(configs) == 0:configs = ['']
             f.close()
         except :
             configs = ['']
-        f = open(os.path.join(os.path.expanduser('~'), ".config/RoboComp/rcmaster.config"), 'w')
+        f = open(configFile, 'w')
         configs[0] = str(masteruri[2] + ':' + masteruri[4])
         f.write("\n".join(configs));f.close()
-        print " Starting rcmaster on ",masteruri[2],"in port ",masteruri[4]
+        print "rcmaster Started on ",masteruri[2],"in port ",masteruri[4]
         
         #       adapter.add(CommonBehaviorI(<LOWER>I, ic), ic.stringToIdentity('commonbehavior'))
 

@@ -20,11 +20,11 @@
 /**
 * \brief Default constructor
 */
-GenericWorker::GenericWorker(MapPrx& mprx) :
-QObject()
+GenericWorker::GenericWorker(MapPrx& mprx, Mapiface& miface) :
+QObject(), ifaces(miface)
 {
+	test_proxy = (*(testPrx*)mprx["testProxy"]);
 	rcmaster_proxy = (*(rcmasterPrx*)mprx["rcmasterProxy"]);
-
 
 	mutex = new QMutex(QMutex::Recursive);
 

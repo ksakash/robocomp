@@ -1,3 +1,5 @@
+#ifndef SERVER_H
+#define SERVER_H
 #pragma once
 
 #include "cameraI.h"
@@ -8,6 +10,8 @@
 #include "laserI.h"
 #include "rgbdI.h"
 #include "touchsensorI.h"
+#include "genericbaseI.h"
+#include "displayI.h"
 
 #include <CommonHead.h>
 
@@ -22,6 +26,11 @@
 /** XXXServer **/
 /** XXXServer **/
 /** XXXServer **/
+
+
+// -----------------------------------------------------------
+// JointMotorServer
+// -----------------------------------------------------------
 class JointMotorServer
 {
 public:
@@ -41,6 +50,28 @@ public:
 	SpecificWorker *worker;
 };
 
+// -----------------------------------------------------------
+// DisplayServer
+// -----------------------------------------------------------
+class DisplayServer
+{
+public:
+	DisplayServer(Ice::CommunicatorPtr communicator, SpecificWorker *worker_, uint32_t _port);
+	void add(InnerModelDisplay *display);
+	void remove(InnerModelDisplay *display);
+	bool empty();
+	void shutdown();
+
+	uint32_t port;
+	Ice::CommunicatorPtr comm;
+	Ice::ObjectAdapterPtr adapter;
+	DisplayI *interface;
+	SpecificWorker *worker;
+};
+
+// -----------------------------------------------------------
+// TouchSensorServer
+// -----------------------------------------------------------
 class TouchSensorServer
 {
 public:
@@ -58,7 +89,9 @@ public:
 	SpecificWorker *worker;
 };
 
-
+// -----------------------------------------------------------
+// LaserServer
+// -----------------------------------------------------------
 class LaserServer
 {
 public:
@@ -71,7 +104,9 @@ public:
 	std::vector<InnerModelLaser *> lasers;
 };
 
-
+// -----------------------------------------------------------
+// RGBDServer
+// -----------------------------------------------------------
 class RGBDServer
 {
 public:
@@ -84,7 +119,9 @@ public:
 	std::vector<InnerModelRGBD *> rgbds;
 };
 
-
+// -----------------------------------------------------------
+// IMUServer
+// -----------------------------------------------------------
 class IMUServer
 {
 public:
@@ -97,7 +134,9 @@ public:
 	std::vector<InnerModelIMU *> imus;
 };
 
-
+// -----------------------------------------------------------
+// DifferentialRobotServer
+// -----------------------------------------------------------
 class DifferentialRobotServer
 {
 public:
@@ -110,6 +149,9 @@ public:
 	std::vector<InnerModelDifferentialRobot *> differentialrobots;
 };
 
+// -----------------------------------------------------------
+// OmniRobotServer
+// -----------------------------------------------------------
 class OmniRobotServer
 {
 public:
@@ -120,6 +162,7 @@ public:
 	Ice::ObjectAdapterPtr adapter;
 	OmniRobotI *interface;
 	DifferentialRobotI *interfaceDFR;
+	GenericBaseI *interfaceGB;
 	std::vector<InnerModelOmniRobot *> omnirobots;
 };
-
+#endif

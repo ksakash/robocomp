@@ -15,9 +15,10 @@ def SPACE(i=0):
 	if i>0:
 		s = str(i)
 	cog.out('<S'+s+'>')
-
+includeDirectories = theIDSLPaths.split('#')
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
+
 
 ]]]
 [[[end]]]
@@ -33,7 +34,7 @@ Z()
  )
 
 SET(RC_COMPONENT_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "component base path") 
-SET(RC_COMPONENT_DEVEL_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "component inary path")
+SET(RC_COMPONENT_DEVEL_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "component binary path")
 
 MACRO( WRAP_PYTHON_UI )
   FOREACH( input_file ${ARGN} )

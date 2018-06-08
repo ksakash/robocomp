@@ -13,13 +13,14 @@ def TAB():
 	cog.out('<TABHERE>')
 
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 if component == None:
 	print('Can\'t locate', theCDSLs)
 	sys.exit(1)
 
 from parseIDSL import *
-modulePool = IDSLPool(theIDSLs)
+modulePool = IDSLPool(theIDSLs, includeDirectories)
 
 theInterface = theInterface.split(';')
 module = modulePool.moduleProviding(theInterface[0])
@@ -76,10 +77,9 @@ cog.out(theInterface[0])
 Z()
 ]]]
 [[[end]]]
-I(GenericWorker *_worker, QObject *parent) : QObject(parent)
+I(GenericWorker *_worker)
 {
 	worker = _worker;
-	mutex = worker->mutex;       // Shared worker mutex
 }
 
 
@@ -135,8 +135,3 @@ I()
 
 ]]]
 [[[end]]]
-
-
-
-
-

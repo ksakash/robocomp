@@ -12,13 +12,14 @@ def TAB():
 	cog.out('<TABHERE>')
 
 from parseCDSL import *
-component = CDSLParsing.fromFile(theCDSL)
+includeDirectories = theIDSLPaths.split('#')
+component = CDSLParsing.fromFile(theCDSL, includeDirectories=includeDirectories)
 if component == None:
 	print('Can\'t locate', theCDSLs)
 	sys.exit(1)
 
 from parseIDSL import *
-pool = IDSLPool(theIDSLs)
+pool = IDSLPool(theIDSLs, includeDirectories)
 
 def replaceTypeCPP2Python(t):
 	t = t.replace('::','.')
@@ -56,9 +57,10 @@ Z()
 
 import sys, os, Ice, traceback, time
 
-from PySide import *
+from PySide import QtGui, QtCore
 from genericworker import *
 
+<<<<<<< HEAD
 ROBOCOMP = ''
 try:
 	ROBOCOMP = os.environ['ROBOCOMP']
@@ -90,6 +92,13 @@ for imp in component['imports']:
 		cog.outl('from ' + im.lower() + 'I import *')
 ]]]
 [[[end]]]
+=======
+# If RoboComp was compiled with Python bindings you can use InnerModel in Python
+# sys.path.append('/opt/robocomp/lib')
+# import librobocomp_qmat
+# import librobocomp_osgviewer
+# import librobocomp_innermodel
+>>>>>>> upstream/highlyunstable
 
 class SpecificWorker(GenericWorker):
 	def __init__(self, proxy_map):
@@ -100,9 +109,7 @@ class SpecificWorker(GenericWorker):
 
 	def setParams(self, params):
 		#try:
-		#	par = params["InnerModelPath"]
-		#	innermodel_path=par.value
-		#	innermodel = InnerModel(innermodel_path)
+		#	self.innermodel = InnerModel(params["InnerModelPath"])
 		#except:
 		#	traceback.print_exc()
 		#	print "Error reading config params"
@@ -111,11 +118,20 @@ class SpecificWorker(GenericWorker):
 	@QtCore.Slot()
 	def compute(self):
 		print 'SpecificWorker.compute...'
+		#computeCODE
 		#try:
 		#	self.differentialrobot_proxy.setSpeedBase(100, 0)
 		#except Ice.Exception, e:
 		#	traceback.print_exc()
 		#	print e
+
+		# The API of python-innermodel is not exactly the same as the C++ version
+		# self.innermodel.updateTransformValues("head_rot_tilt_pose", 0, 0, 0, 1.3, 0, 0)
+		# z = librobocomp_qmat.QVec(3,0)
+		# r = self.innermodel.transform("rgbd", z, "laser")
+		# r.printvector("d")
+		# print r[0], r[1], r[2]
+
 		return True
 
 [[[cog
@@ -152,10 +168,13 @@ for impa in lst:
 				cog.outl('<TABHERE>#')
 				cog.outl('<TABHERE># ' + method['name'])
 				cog.outl('<TABHERE>#')
-				cog.outl('<TABHERE>def ' + method['name'] + '(self' + paramStrA + "):")
+				if not communicationIsIce(imp):
+					cog.outl('<TABHERE>def ROS' + method['name'] + '(self' + paramStrA + "):")
+				else:
+					cog.outl('<TABHERE>def ' + method['name'] + '(self' + paramStrA + "):")
 				if method['return'] != 'void': cog.outl("<TABHERE><TABHERE>ret = "+method['return']+'()')
 				cog.outl("<TABHERE><TABHERE>#")
-				cog.outl("<TABHERE><TABHERE># YOUR CODE HERE")
+				cog.outl("<TABHERE><TABHERE>#subscribesToCODE")
 				cog.outl("<TABHERE><TABHERE>#")
 				if len(outValues) == 0:
 					cog.outl("<TABHERE><TABHERE>pass\n")
@@ -177,9 +196,69 @@ for impa in lst:
 						if first:
 							first = False
 					cog.out("]\n")
+<<<<<<< HEAD
+=======
+for imp in component['implements']:
+	if type(imp) == str:
+		im = imp
+	else:
+		im = imp[0]
+	if not communicationIsIce(imp):
+		module = pool.moduleProviding(im)
+		for interface in module['interfaces']:
+			if interface['name'] == im:
+				for mname in interface['methods']:
+					method = interface['methods'][mname]
+					cog.outl('<TABHERE>def ROS' + method['name'] + "(self, req):")
+					cog.outl("<TABHERE><TABHERE>#")
+					cog.outl("<TABHERE><TABHERE>#implementCODE")
+					cog.outl("<TABHERE><TABHERE>#Example ret = req.a + req.b")
+					cog.outl("<TABHERE><TABHERE>#")
+					cog.outl("<TABHERE><TABHERE>return "+method['name']+"Response(ret)")
+	else:
+		module = pool.moduleProviding(im)
+		for interface in module['interfaces']:
+			if interface['name'] == im:
+				for mname in interface['methods']:
+					method = interface['methods'][mname]
+					outValues = []
+					if method['return'] != 'void':
+						outValues.append([method['return'], 'ret'])
+					paramStrA = ''
+					for p in method['params']:
+						if p['decorator'] == 'out':
+							outValues.append([p['type'], p['name']])
+						else:
+							paramStrA += ', ' +  p['name']
+					cog.outl('')
+					cog.outl('<TABHERE>#')
+					cog.outl('<TABHERE># ' + method['name'])
+					cog.outl('<TABHERE>#')
+					cog.outl('<TABHERE>def ' + method['name'] + '(self' + paramStrA + "):")
+					if method['return'] != 'void': cog.outl("<TABHERE><TABHERE>ret = "+method['return']+'()')
+					cog.outl("<TABHERE><TABHERE>#")
+					cog.outl("<TABHERE><TABHERE>#implementCODE")
+					cog.outl("<TABHERE><TABHERE>#")
+					if len(outValues) == 0:
+						cog.outl("<TABHERE><TABHERE>pass\n")
+					elif len(outValues) == 1:
+						if method['return'] != 'void':
+							cog.outl("<TABHERE><TABHERE>return ret\n")
+						else:
+							cog.outl("<TABHERE><TABHERE>"+outValues[0][1]+" = "+replaceTypeCPP2Python(outValues[0][0])+"()")
+							cog.outl("<TABHERE><TABHERE>return "+outValues[0][1]+"\n")
+					else:
+						for v in outValues:
+							if v[1] != 'ret':
+								cog.outl("<TABHERE><TABHERE>"+v[1]+" = "+replaceTypeCPP2Python(v[0])+"()")
+						first = True
+						cog.out("<TABHERE><TABHERE>return [")
+						for v in outValues:
+							if not first: cog.out(', ')
+							cog.out(v[1])
+							if first:
+								first = False
+						cog.out("]\n")
+>>>>>>> upstream/highlyunstable
 ]]]
 [[[end]]]
-
-
-
-

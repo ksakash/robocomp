@@ -1,12 +1,8 @@
-CommonBehavior.Endpoints=tcp -p 1
+CommonBehavior.Endpoints=tcp -p 0
 
 
-# Endpoints for implemented interfaces
-test.Endpoints=tcp -p 0
-
-
-# Proxies for required interfaces
-rcmasterProxy = rcmaster:tcp -h localhost -p 0
+# General properties of Component
+Ice.ProgramName=client2
 
 
 

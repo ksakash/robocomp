@@ -8,8 +8,9 @@ by [RoboLab](http://robolab.unex.es), [ISIS](http://www.grupoisis.uma.es/index.p
 RoboComp is an open-source Robotics framework providing the tools to create and modify software components that communicate through public interfaces. Components may *require*, *subscribe*, *implement* or *publish*
 interfaces in a seamless way. Building new components is done using two domain specific languages, IDSL and CDSL. With IDSL you define an interface and with CDSL you specify how the component will communicate with the world. With this information, a code generator creates C++ and/or Python sources, based on CMake, that compile and execute flawlessly. When some of these features have to be changed, the component can be easily regenerated and all the user specific code is preserved thanks to a simple inheritance mechanism.
 
-If you already have RoboComp installed, jump to [tutorials!](doc/README.md) to start coding! 
+If you already have RoboComp installed, jump to [tutorials](doc/README.md) to start coding! 
 
+<<<<<<< HEAD
 # Installation in Ubuntu from PPA
 
 Coming soon...
@@ -22,6 +23,9 @@ Coming soon...
 Remember to start a new bash session before continue using RoboComp: new variables included must be included in your shell environment.
 -->
 
+=======
+
+>>>>>>> upstream/highlyunstable
 # Installation from source
 
 Tested in Ubuntu 14.04, 14.10, 15.04, 15.10 and 16.04
@@ -32,15 +36,25 @@ Tested in Ubuntu 14.04, 14.10, 15.04, 15.10 and 16.04
 Make sure you have installed the following packages from the Ubuntu repository:
 
     sudo apt-get update
+<<<<<<< HEAD
     sudo apt-get install git git-annex cmake g++ libgsl0-dev libopenscenegraph-dev cmake-qt-gui zeroc-ice35 freeglut3-dev libboost-system-dev libboost-thread-dev qt4-dev-tools yakuake python-pip  python-pyparsing python-numpy python-pyside pyside-tools libxt-dev pyqt4-dev-tools qt4-designer libboost-test-dev libboost-filesystem-dev libqt4-dev libqt4-opengl-dev 
     
+=======
+    sudo apt-get install git git-annex cmake g++ libgsl0-dev libopenscenegraph-dev cmake-qt-gui zeroc-ice35 freeglut3-dev libboost-system-dev libboost-thread-dev qt4-dev-tools python-pip  python-pyparsing python-numpy python-pyside pyside-tools libxt-dev pyqt4-dev-tools libboost-test-dev libboost-filesystem-dev python-libxml2 python-xmltodict libccd-dev
+    sudo pip install networkx
+
+It is recommendable to install the following packages::
+
+    sudo apt-get install yakuake qt4-designer
+
+>>>>>>> upstream/highlyunstable
 ## Installation itself
 
 *cd* to your user (/home/your-linux-user) directory (you are probably in it already) and type:
 
     git clone https://github.com/robocomp/robocomp.git
 
-Now we will create a symbolic link so RobComp can find everything. You will have to enter your passwd:
+Now we will create a symbolic link so RoboComp can find everything. You will have to enter your password:
 
     sudo ln -s ~ /home/robocomp
     
@@ -69,7 +83,11 @@ Done! Now let's compile and install the whole thing:
     make
     sudo make install
 
+<<<<<<< HEAD
 If you want to compile Robocomp with support for FCL, follow the instructions in the [Robocomp with FCL](doc/Compiling-RoboComp-with-collision-detection.md) tutorial"
+=======
+If you want to compile Robocomp with support for FCL, follow the instructions in the [Robocomp with FCL](doc/Compiling-RoboComp-with-collision-detection.md) tutorial.
+>>>>>>> upstream/highlyunstable
 
 The RoboComp's core libraries and simulator should now be compiled and installed in `/opt/robocomp`.
 
@@ -128,6 +146,7 @@ and check where the joystick device file has been created (e.g., `/dev/input/js0
 
 
 ## Using the keyboard as a JoyStick
+<<<<<<< HEAD
 
 If you don't have a JoyStick follow these steps:
 
@@ -135,6 +154,8 @@ Open simulator
    
     cd ~/robocomp/files/innermodel
     rcis simpleworld.xml
+=======
+>>>>>>> upstream/highlyunstable
 
 Now open a new terminal and install this component,
 
@@ -147,7 +168,7 @@ and use the arrow keys to navigate the robot, the space bar to stop it an 'q' to
 
 
 ---------------------------------------------------------------------
-You can find more tutorials on RoboComp in [tutorials!](doc/README.md) 
+You can find more tutorials on RoboComp in [tutorials](doc/README.md)! 
 
 Drop comments and ask questions in:
 
@@ -155,6 +176,8 @@ Drop comments and ask questions in:
 - https://gitter.im/robocomp
 
 Please, report any bugs to pbustos@unex.es
+
+If you have any suggestions to improve the repository, like features or tutorials, please contact: robocomp.team@gmail.com 
 
 
 

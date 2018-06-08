@@ -35,33 +35,57 @@
 #include "servers.h"
 #include "pickhandler.h"
 
-//////////////////////
-// RENDERER THREAD
-///////////////////////
 
-// class RenderThread : public QThread
-// {
-// 	public:
-// 		RenderThread() : QThread(), viewerPtr(0) {}
-// 		virtual ~RenderThread()
-// 		{ 
-// 			if (viewerPtr) viewerPtr->setDone(true); wait(); 
-// 		}			
-// 		osgViewer::Viewer* viewerPtr;
-// 	protected:
-// 		virtual void run()
-// 		{ 
-// 			if (viewerPtr) viewerPtr->run(); 		
-// 		}
-// };
 
 class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
 private:
-	struct Data;
-	Data* d;
+	// World
+	InnerModel *innerModel;
+	InnerModelViewer *imv;
+	OsgView *viewer;
+	osgGA::TrackballManipulator *manipulator;
+
+	// Handlers
+	Ice::CommunicatorPtr communicator;
+	std::map<uint32_t, JointMotorServer> jm_servers;
+	std::map<uint32_t, TouchSensorServer> touch_servers;
+	std::map<uint32_t, LaserServer> laser_servers;
+	std::map<uint32_t, RGBDServer> rgbd_servers;
+	std::map<uint32_t, IMUServer> imu_servers;
+	std::map<uint32_t, DifferentialRobotServer> dfr_servers;
+	std::map<uint32_t, OmniRobotServer> omn_servers;
+	std::map<uint32_t, DisplayServer> display_servers;
+
+	QList <JointMotorServer *> jointServersToShutDown;
+
+	// Camera
+
+	// DifferentialRobot
+
+	// InnerModelManager
+
+	// IMU
+	DataImu data_imu;
+	struct JointMovement
+	{
+		float endPos;
+		float endSpeed;
+		float maxAcc;
+		enum { FixedPosition, TargetPosition, TargetSpeed } mode;
+	};
+	// JointMotor
+	QHash<QString, JointMovement> jointMovements;
+
+	// Laser
+	QMap<QString, RoboCompLaser::TLaserData> laserDataArray;
+	QMap<QString, osg::Vec3Array*> laserDataCartArray;
+	QMutex *laserDataCartArray_mutex;
+
 	QSettings *settings;
+	JointMotorServer *j;
+
 
 public:
 	SpecificWorker(MapPrx &_mprx, Ice::CommunicatorPtr _communicator, const char *_innerModelXML, int ms);
@@ -73,7 +97,43 @@ public:
 	QMutex *viewerMutex;
 	void startServers();
 	void scheduleShutdown(JointMotorServer *j);
-	
+
+// -----------------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------------
+private:
+	 RoboCompLaser::TLaserData LASER_createLaserData(const IMVLaser &laser);
+	 InnerModelNode *getNode(const QString &id, const QString &msg);
+	 void checkOperationInvalidNode(InnerModelNode *node,QString msg);
+	 void checkNodeAlreadyExists(const QString &id, const QString &msg);
+	 void checkInvalidMeshValues(RoboCompInnerModelManager::meshType m, QString msg);
+	 void AttributeAlreadyExists(InnerModelNode *node, QString attributeName, QString msg);
+	 void NonExistingAttribute(InnerModelNode *node, QString attributeName, QString msg);
+	 void getRecursiveNodeInformation(RoboCompInnerModelManager::NodeInformationSequence& nodesInfo, InnerModelNode *node);
+	 RoboCompInnerModelManager::NodeType getNodeType(InnerModelNode *node);
+	 void cambiaColor(QString id, osg::Vec4 color);
+	 void devuelveColor(QString id);
+	 void changeLigthState(bool apagar);
+	 void updateJoints(const float delta);
+	 void updateTouchSensors();
+	 void addDFR(InnerModelDifferentialRobot *node);
+	 void addOMN(InnerModelOmniRobot *node);
+	 void addDisplay(InnerModelDisplay *node);
+	 void addIMU(InnerModelIMU *node);
+	 void addJM(InnerModelJoint *node);
+	 void addJM(InnerModelPrismaticJoint *node);
+	 void addTouch(InnerModelTouchSensor *node);
+	 void addLaser(InnerModelLaser *node);
+	 void addRGBD(InnerModelRGBD *node);
+	 void removeJM(InnerModelJoint *node);
+	 void includeLasers();
+	 void includeRGBDs();
+	 void walkTree(InnerModelNode *node = NULL);
+
+
+
+
+
 public slots:
 	// ----------------------------------------------------------------------------------------
 	// GUI event handlers
@@ -95,38 +155,38 @@ public:
 	// ----------------------------------------------------------------------------------------
 	// Camera.ice
 	// ----------------------------------------------------------------------------------------
-	void cam_camera_getYUVImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompDifferentialRobot::TBaseState& bState);
-	void cam_getYImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompDifferentialRobot::TBaseState& bState);
-	void cam_getYLogPolarImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompDifferentialRobot::TBaseState& bState);
-	void cam_getYImageCR(const QString& server, int cam, int div, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompDifferentialRobot::TBaseState& bState);
-	void cam_getRGBPackedImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompDifferentialRobot::TBaseState& bState);
-	void cam_getYRGBImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompDifferentialRobot::TBaseState& bState);
+	void cam_camera_getYUVImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompGenericBase::TBaseState& bState);
+	void cam_getYImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompGenericBase::TBaseState& bState);
+	void cam_getYLogPolarImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompGenericBase::TBaseState& bState);
+	void cam_getYImageCR(const QString& server, int cam, int div, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompGenericBase::TBaseState& bState);
+	void cam_getRGBPackedImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompGenericBase::TBaseState& bState);
+	void cam_getYRGBImage(const QString& server, int cam, RoboCompCamera::imgType& roi, RoboCompCommonHead::THeadState& hState, RoboCompGenericBase::TBaseState& bState);
 	TCamParams cam_getCamParams(const QString& server);
 	void cam_setInnerImage(const QString& server, const RoboCompCamera::imgType& roi);
-	
+
 	// ----------------------------------------------------------------------------------------
 	// CommonBehavior.ice
 	// ----------------------------------------------------------------------------------------
-	
+
 	// ----------------------------------------------------------------------------------------
 	// DifferentialRobot.ice
 	// ----------------------------------------------------------------------------------------
-	void dfr_getBaseState(const QString& server, RoboCompDifferentialRobot::TBaseState& state);
+	void dfr_getBaseState(const QString& server, RoboCompGenericBase::TBaseState& state);
 	void dfr_getBasePose(const QString& server, int& x, int& z, float& alpha);
 	void dfr_setSpeedBase(const QString& server, float adv, float rot);
 	void dfr_stopBase(const QString& server);
 	void dfr_resetOdometer(const QString& server);
-	void dfr_setOdometer(const QString& server, const RoboCompDifferentialRobot::TBaseState& state);
+	void dfr_setOdometer(const QString& server, const RoboCompGenericBase::TBaseState& state);
 	void dfr_setOdometerPose(const QString& server, int x, int z, float alpha);
 	void dfr_correctOdometer(const QString& server, int x, int z, float alpha);
-	
+
 	// ----------------------------------------------------------------------------------------
 	// IMU.ice
 	// ----------------------------------------------------------------------------------------
 	void imu_updateIMUData(const QString& server, QString id);
 	DataImu imu_getDataImu(const QString& server);
 	void imu_resetImu(const QString& server);
-	
+
 	// ----------------------------------------------------------------------------------------
 	// InnerModelManager.ice
 	// ----------------------------------------------------------------------------------------
@@ -152,7 +212,7 @@ public:
 	void imm_getAllNodeInformation(const QString& server, RoboCompInnerModelManager::NodeInformationSequence &nodesInfo);
 	void imm_setPointCloudData(const QString& server, const std::string &id, const RoboCompInnerModelManager::PointCloudVector &cloud);
 	bool imm_collide(const string &a, const string &b);
-	
+
 	// ----------------------------------------------------------------------------------------
 	// JointMotor.ice
 	// ----------------------------------------------------------------------------------------
@@ -174,21 +234,28 @@ public:
 	void jm_releaseBrakeMotor(const QString& server, const std::string& motor);
 	void jm_enableBrakeAllMotors(const QString& server);
 	void jm_enableBrakeMotor(const QString& server, const std::string& motor);
-	
+
 	// ----------------------------------------------------------------------------------------
 	// Laser.ice
 	// ----------------------------------------------------------------------------------------
-	TLaserData laser_getLaserAndBStateData(const QString& server, RoboCompDifferentialRobot::TBaseState& state);
+	TLaserData laser_getLaserAndBStateData(const QString& server, RoboCompGenericBase::TBaseState& state);
 	LaserConfData laser_getLaserConfData(const QString& server);
-	
+
 	// ----------------------------------------------------------------------------------------
 	// RGBD.ice
 	// ----------------------------------------------------------------------------------------
 	TRGBDParams rgbd_getRGBDParams(const QString& server);
 	void rgbd_setRegistration(const QString& server, Registration value);
 	Registration rgbd_getRegistration(const QString& server);
-	void rgbd_getData(const QString& server, RoboCompRGBD::imgType& rgbMatrix, depthType& distanceMatrix, RoboCompJointMotor::MotorStateMap& hState, RoboCompDifferentialRobot::TBaseState& bState);
-	void rgbd_getImage(const QString& server, ColorSeq& color, DepthSeq& depth, PointSeq& points, RoboCompJointMotor::MotorStateMap& hState, RoboCompDifferentialRobot::TBaseState& bState);
+	void rgbd_getData(const QString& server, RoboCompRGBD::imgType& rgbMatrix, depthType& distanceMatrix, RoboCompJointMotor::MotorStateMap& hState, RoboCompGenericBase::TBaseState& bState);
+	void rgbd_getImage(const QString& server, ColorSeq& color, DepthSeq& depth, PointSeq& points, RoboCompJointMotor::MotorStateMap& hState, RoboCompGenericBase::TBaseState& bState);
+
+	// ---------------------------------------------------------------------------------------
+	// Display.ice
+	// ---------------------------------------------------------------------------------------
+
+	void di_setImage(const std::string& item, const std::string& texture);
+
 };
 
 

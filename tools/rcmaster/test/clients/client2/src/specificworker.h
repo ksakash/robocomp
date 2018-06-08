@@ -24,10 +24,6 @@
 
 
 
-
-
-
-
 #ifndef SPECIFICWORKER_H
 #define SPECIFICWORKER_H
 
@@ -38,9 +34,10 @@ class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
 public:
-	SpecificWorker(MapPrx& mprx);	
+	SpecificWorker(MapPrx& mprx, Mapiface& miface);
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
+	void waitforComp(::IceProxy::Ice::Object* proxy, string interfaceName);
 
 	void printmsg(const string &message);
 
@@ -48,6 +45,7 @@ public slots:
 	void compute(); 	
 
 private:
+	InnerModel *innerModel;
 	
 };
 

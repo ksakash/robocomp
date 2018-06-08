@@ -18,7 +18,9 @@ def SPACE(i=0):
 
 from parseIDSL import *
 customTypesList = []
-idsl = IDSLParsing.fromFileIDSL(theIDSL)
+
+includeDirectories = theIDSLPaths.split('#')
+idsl = IDSLParsing.gimmeIDSLStruct(theIDSL, files='', includeDirectories=includeDirectories)
 for imp in idsl['module']['contents']:
 	if imp['type'] in ('sequence', 'struct'):
 		customTypesList.append(imp)
@@ -28,26 +30,28 @@ for imp in idsl['module']['contents']:
 			for customType in customTypesList:
 				if structVar[0] == customType['name']:
 					if customType['type'] == 'sequence':
-						if customType['typeSequence'] in ('float','int','uint'):
-							cog.outl(customType['typeSequence'] +"32[] " + structVar[1])
+						if customType['typeSequence'] in ('float','int'):
+							cog.outl(customType['typeSequence'].replace('/','ROS/') +"32[] " + structVar[1])
 						else:
-							cog.outl(customType['typeSequence'] +"[] " + structVar[1])
+							cog.outl(customType['typeSequence'].replace('/','ROS/') +"[] " + structVar[1])
 						wascustomType = True
 						break
 					elif structVar[0] == 'struct':
-						cog.outl(customType['name'] +" " + structVar[1])
+						cog.outl(customType['name'].replace('/','ROS/') +" " + structVar[1])
 						wascustomType = True
 						break
 			if not wascustomType:
-				if structVar[0] in ('float','int','uint'):
+				if structVar[0] in ('float','int'):
 					cog.outl(structVar[0]+"32 "+structVar[1])
 				else:
 					str = structVar[0]+" "+structVar[1]
-					cog.outl(str.replace("::", "/"))
+					cog.outl(str.replace("::", "ROS/"))
 	elif imp['type'] == 'sequence' and imp['name'] == structName:
-		if imp['typeSequence'] in ('float','int','uint'):
-			cog.outl(imp['typeSequence'] +"32[] " + structName)
-		elif imp['typeSequence'] == 'byte':
-			cog.outl('int8[] ' + structName)
+		msg = ''
+		if imp['typeSequence'] in ('float','int'):
+			msg = imp['typeSequence'] +"32[] " + structName
+		else:
+			msg = imp['typeSequence'] +"[] "+ structName
+		cog.outl(msg.replace("::", "ROS/"))
 ]]]
 [[[end]]]
