@@ -1,6 +1,7 @@
 set(LIB_NAME innermodel)
 set(LIB_DESC "RoboComp InnerModel library")
 set(LIB_DEPS qmat osgviewer)
+SET( CMAKE_CXX_STANDARD 11 )
 
 set(srcs
 	innermodel.cpp
@@ -78,6 +79,8 @@ if (PYTHON_BINDINGS_SUPPORT)
 	link_directories(${PYTHON_LIBRARIES} ${Boost_LIBRARY_DIRS_DIRS})
 endif (PYTHON_BINDINGS_SUPPORT)
 
+find_package (pybind11 REQUIRED)
+
 RoboComp_LIB_DEPEND(build ${LIB_NAME} DEPS ${LIB_DEPS} OPT_DEPS)
 set(OUT_FILE_NAME ${PROJECT_NAME_LOWER}_${LIB_NAME})
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include  ${CMAKE_CURRENT_BINARY_DIR}/libs ${PYTHON_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} )
@@ -85,5 +88,21 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include  ${CMAKE_CURRENT_BINARY
 
 RoboComp_ADD_LIBRARY(${OUT_FILE_NAME} SHARED ${LIB_NAME} ${srcs} ${incs} )
 RoboComp_ADD_INCLUDES(${LIB_NAME} ${LIB_NAME} ${incs})
+
+pybind11_add_module (inner_model innermodel_pybind11.cpp ${srcs})
+target_link_libraries( inner_model PRIVATE ${QT_LIBRARIES} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES} -losg -losgViewer robocomp_qmat ${FCL_LIBS} )
+SET_TARGET_PROPERTIES( inner_model
+PROPERTIES
+	PREFIX ""
+	LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/innermodel_pybind11"
+)
+
+CONFIGURE_FILE(innermodel_pybind11/__init__.py
+	${CMAKE_CURRENT_BINARY_DIR}/innermodel_pybind11/__init__.py
+)
+
+CONFIGURE_FILE(innermodel_pybind11/setup.py
+	${CMAKE_CURRENT_BINARY_DIR}/innermodel_pybind11/setup.py
+)
 
 target_link_libraries( ${OUT_FILE_NAME} ${QT_LIBRARIES} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES} -losg -losgViewer robocomp_qmat ${FCL_LIBS} )

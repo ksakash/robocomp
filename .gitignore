@@ -79,3 +79,4 @@ ui_**.pyc
 *CMakeCache.txt
 
 *build/
+libs/innermodel/.vscode
