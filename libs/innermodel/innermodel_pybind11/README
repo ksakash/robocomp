@@ -65,3 +65,7 @@ $ python3 test.py
 
 # all tests should pass
 
+------------------------
+
+Note: Tested on Ubuntu 18.04 with python-3.6
+
