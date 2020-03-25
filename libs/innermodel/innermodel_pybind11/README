@@ -24,7 +24,7 @@ Build RoboComp:
 $ git clone https://github.com/ksakash/robocomp.git
 $ sudo ln -s $(pwd) /home/robocomp
 $ gedit ~/.bashrc
-$ export ROBOCOMP=~/robocomp
+$ export ROBOCOMP=/home/robocomp/robocomp
 $ export PATH=$PATH:/opt/robocomp/bin
 $ source ~/.bashrc
 
@@ -51,7 +51,7 @@ $ sudo python3 setup.py install --user
 Test the installation:
 
 $ python3
->>#import innermodel_pybind11 as m
+>>import innermodel_pybind11 as m
 >>
 
 # success
