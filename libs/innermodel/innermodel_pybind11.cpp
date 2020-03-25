@@ -31,6 +31,8 @@ PYBIND11_MODULE(inner_model, m) {
         .def(py::init<>())
         .def(py::init<std::string>())
         .def(py::init<InnerModel *>())
+        .def("open", &InnerMode::open)
+        .def("save", &InnerModel::save)
         .def("update", &InnerModel::update)
         .def("cleanupTables", &InnerModel::cleanupTables)
         // cannot use these methods as binding of RTMat is not available

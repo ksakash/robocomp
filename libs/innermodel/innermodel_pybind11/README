@@ -1,0 +1,67 @@
+Dependency: pybind11
+
+-----------------------
+
+Installation of pybind11:
+
+$ git clone https://github.com/pybind/pybind11.git
+$ cd pybind11
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ sudo make install
+
+------------------------
+
+# assuming you have installed all the dependencies as
+# written on the README.md in the project source dir
+
+Build RoboComp:
+
+# these are same as given in the README.md
+
+$ git clone https://github.com/ksakash/robocomp.git
+$ sudo ln -s $(pwd) /home/robocomp
+$ gedit ~/.bashrc
+$ export ROBOCOMP=~/robocomp
+$ export PATH=$PATH:/opt/robocomp/bin
+$ source ~/.bashrc
+
+$ sudo [ -d /opt/robocomp ] && rm -r /opt/robocomp
+$ cd robocomp
+$ git checkout pybind-dev
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ sudo make install
+
+------------------------
+
+Install the built python module:
+
+$ cd /home/robocomp/robocomp/build/libs/innermodel/innermodel_pybind11
+$ sudo python3 setup.py install --user
+
+# python module will be installed
+
+------------------------
+
+Test the installation:
+
+$ python3
+>>#import innermodel_pybind11 as m
+>>
+
+# success
+
+------------------------
+
+Run unit tests:
+
+$ cd /home/robocomp/robocomp/libs/innermodel/innermodel_pybind11
+$ python3 test.py
+
+# all tests should pass
+
